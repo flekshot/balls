@@ -6,8 +6,8 @@ import time
 pygame.init()
 
 # windows
-window_width = 800
-window_height = 600
+window_width = 1700
+window_height = 880
 
 # display
 window = pygame.display.set_mode((window_width, window_height))
@@ -32,9 +32,9 @@ ball_y = window_height // 2
 ball_dx = 5
 ball_dy = -5  # ball always start going up
 
-# played paddle properties
-paddle_width = 100
-paddle_height = 10
+# player paddle properties
+paddle_width = 150  # increased paddle width
+paddle_height = 15  # increased paddle height
 paddle_x = (window_width - paddle_width) // 2
 paddle_y = window_height - paddle_height - 10
 paddle_dx = 10
@@ -53,13 +53,16 @@ last_photo_appearance_time = start_time
 font = pygame.font.SysFont(None, 55)
 small_font = pygame.font.SysFont(None, 35)
 
-# bounce sound
+# sounds
 bounce_sound = pygame.mixer.Sound('assets/bounce.wav')
+pygame.mixer.music.load('assets/background_music.mp3')
 
 # images load
+background_image = pygame.image.load('assets/background_image.jpg')
+background_image = pygame.transform.scale(background_image, (window_width, window_height))
 photo1 = pygame.image.load('assets/photo1.png')
 photo2 = pygame.image.load('assets/photo2.png')
-photo_size = (50, 50)
+photo_size = (100, 100)  # increased image size to 100x100
 photo1 = pygame.transform.scale(photo1, photo_size)
 photo2 = pygame.transform.scale(photo2, photo_size)
 photo_positions = []
@@ -77,6 +80,7 @@ def show_game_over():
     # outline for button
     pygame.draw.rect(window, green, restart_button_rect.inflate(20, 10), 2)
     return restart_button_rect
+
 # game restart
 def restart_game():
     global ball_x, ball_y, ball_dx, ball_dy, paddle_x, game_over, score, start_time, particles, last_difficulty_increase_time, photo_positions, photos_visible, last_photo_appearance_time
@@ -93,11 +97,12 @@ def restart_game():
     particles = []
     photo_positions = []
     photos_visible = False
+
 # score and timer
 def draw_score_and_timer():
     elapsed_time = int(time.time() - start_time)
-    score_text = small_font.render(f'Score: {score}', True, black)
-    timer_text = small_font.render(f'Time: {elapsed_time}s', True, black)
+    score_text = small_font.render(f'Score: {score}', True, white)
+    timer_text = small_font.render(f'Time: {elapsed_time}s', True, white)
     window.blit(score_text, (10, 10))
     window.blit(timer_text, (10, 50))
 
@@ -158,6 +163,9 @@ def menu():
                     pygame.quit()
                     exit()
 
+# start background music
+pygame.mixer.music.play(-1)  # play indefinitely
+
 # game loop
 menu()
 running = True
@@ -197,6 +205,21 @@ while running:
             bounce_sound.play()
             create_particles(ball_x, ball_y)
 
+        # ball collision w photos
+        if photos_visible:
+            for photo, pos in photo_positions:
+                photo_rect = pygame.Rect(pos[0], pos[1], photo_size[0], photo_size[1])
+                if photo_rect.colliderect(pygame.Rect(ball_x - ball_radius, ball_y - ball_radius, ball_radius * 2, ball_radius * 2)):
+                    if ball_x - ball_radius < photo_rect.right and ball_dx > 0:
+                        ball_dx = -ball_dx
+                    elif ball_x + ball_radius > photo_rect.left and ball_dx < 0:
+                        ball_dx = -ball_dx
+                    if ball_y - ball_radius < photo_rect.bottom and ball_dy > 0:
+                        ball_dy = -ball_dy
+                    elif ball_y + ball_radius > photo_rect.top and ball_dy < 0:
+                        ball_dy = -ball_dy
+                    bounce_sound.play()
+
         # ball things
         if ball_y >= window_height - ball_radius:
             game_over = True
@@ -215,7 +238,7 @@ while running:
             remove_photos()
 
     # screen
-    window.fill(white)
+    window.blit(background_image, (0, 0))
 
     if game_over:
         restart_button_rect = show_game_over()
@@ -243,5 +266,6 @@ while running:
     # cap for frame rate
     clock.tick(fps)
 
-# quit
+# stop background music and quit
+pygame.mixer.music.stop()
 pygame.quit()
