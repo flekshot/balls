@@ -38,6 +38,8 @@ paddle_height = 15  # increased paddle height
 paddle_x = (window_width - paddle_width) // 2
 paddle_y = window_height - paddle_height - 10
 paddle_dx = 10
+paddle_dx_increase = 1  # paddle speed increase over time
+max_paddle_dx = 20  # max paddle speed
 
 # state
 game_over = False
@@ -83,7 +85,7 @@ def show_game_over():
 
 # game restart
 def restart_game():
-    global ball_x, ball_y, ball_dx, ball_dy, paddle_x, game_over, score, start_time, particles, last_difficulty_increase_time, photo_positions, photos_visible, last_photo_appearance_time
+    global ball_x, ball_y, ball_dx, ball_dy, paddle_x, game_over, score, start_time, particles, last_difficulty_increase_time, photo_positions, photos_visible, last_photo_appearance_time, paddle_dx
     ball_x = window_width // 2
     ball_y = window_height // 2
     ball_dx = random.choice([-5, 5])
@@ -97,6 +99,7 @@ def restart_game():
     particles = []
     photo_positions = []
     photos_visible = False
+    paddle_dx = 10
 
 # score and timer
 def draw_score_and_timer():
@@ -120,9 +123,11 @@ def draw_particles():
             particles.remove(particle)
 
 def increase_difficulty():
-    global ball_dx, ball_dy
+    global ball_dx, ball_dy, paddle_dx
     ball_dx *= 1.2
     ball_dy *= 1.2
+    if paddle_dx < max_paddle_dx:
+        paddle_dx += paddle_dx_increase
 
 def add_photos():
     global photo_positions, photos_visible
